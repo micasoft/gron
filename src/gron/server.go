@@ -1,9 +1,8 @@
-package main
+package gron
 
 import (
 	"bytes"
 	"encoding/gob"
-	"flag"
 	"log"
 	"net"
 	"os"
@@ -12,10 +11,6 @@ import (
 )
 
 const sock = "/tmp/gron.sock"
-
-var daemon = flag.Bool("d", false, "Starting as a daemon")
-var cmd = flag.String("c", "ls", "Command")
-var prio = flag.Int("p", 0, "Set a prio of process")
 
 type Job struct {
 	RawCommand string
@@ -37,7 +32,7 @@ func (j *Job) Decode(buf []byte) {
 	decoder.Decode(&j.RawPrio)
 }
 
-func server() {
+func Server() {
 	l, err := net.Listen("unix", sock)
 	if err != nil {
 		log.Fatal("listen error:", err)
@@ -61,6 +56,7 @@ func server() {
 
 	kv := <-ksignal
 	log.Printf("Signal to finish : %s", kv.String())
+	os.Remove(sock)
 }
 
 func execute(c net.Conn) {
@@ -76,31 +72,5 @@ func execute(c net.Conn) {
 
 		log.Printf("let me run this : %s with prio %d", j.RawCommand, j.RawPrio)
 		//_, err = c.rite(data)
-	}
-}
-
-func client(cmd *string, prio *int) {
-	c, err := net.Dial("unix", sock)
-	bcmd := Job{RawCommand: *cmd, RawPrio: *prio}
-	if err != nil {
-		panic(err)
-	}
-	defer c.Close()
-	log.Printf("run %s by %d", bcmd.RawCommand, bcmd.RawPrio)
-
-	_, errz := c.Write(bcmd.Encode())
-	if errz != nil {
-		log.Fatal("write error:", err)
-	}
-}
-
-func main() {
-	//Read config
-	flag.Parse()
-
-	if *daemon {
-		server()
-	} else {
-		client(cmd, prio)
 	}
 }
