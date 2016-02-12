@@ -7,7 +7,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"fmt"
 	"os"
-	"strconv"
+	"time"
 )
 
 func connect() net.Conn {
@@ -42,15 +42,16 @@ func GetStatus() {
 		s.Decode(c)
 		cyan := color.New(color.FgCyan).SprintFunc()
 		yellow := color.New(color.FgYellow).SprintFunc()
+		fmt.Printf("\n\n%s : \t%s\n", cyan("Maximum of process"), yellow(s.MaxProcess))
 		fmt.Printf("%s : \t%s\n", cyan("Total of process"), yellow(s.Process))
 		fmt.Printf("%s : \t%s\n", cyan("Total of running"), yellow(s.Running))
 		fmt.Printf("%s: \t\t%s\n\n", cyan("Total of seq."), yellow(s.Sequence))
 
 		if (len(s.Waiting.([]*Job)) > 0) {
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Landing", "Command", "Priority"})
+			table.SetHeader([]string{"Sequence", "Landing", "Command", "Priority"})
 			for _, j := range s.Waiting.([]*Job) {
-				v := []string{j.Created.Format("15:04:05.000"), j.RawCommand,  strconv.Itoa(j.Prio)}
+				v := []string{fmt.Sprintf("%09d",j.Sequence), fmt.Sprintf("%.3f",time.Now().Sub(j.Created).Seconds()), j.RawCommand, fmt.Sprintf("%d", j.Prio)}
 	    		table.Append(v)
 			}
 			table.Render()

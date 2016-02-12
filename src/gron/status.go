@@ -8,6 +8,7 @@ import (
 
 
 type Status struct {
+	MaxProcess 	int
 	Process 	int
 	Running		int
 	Sequence	int

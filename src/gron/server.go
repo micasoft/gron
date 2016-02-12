@@ -55,22 +55,35 @@ func Server(max int) {
 	os.Remove(sock)
 }
 
+func appendJob(j *Job) bool{
+	for _, ja := range jobs {
+		if j.RawCommand == ja.RawCommand {
+			ja.Prio ++
+			return false
+		}
+	}
+	sequence ++
+	j.Sequence = sequence
+	j.Created = time.Now()
+	j.Prio = j.RawPrio
+	jobs = append(jobs, j)
+	return true
+}
+
 func trait_request(c net.Conn) {
 	defer c.Close()
 	cr := NewClientRequest()
 	cr.Decode(c)
 	switch cr.Request {
 	case "job":
-		sequence = sequence + 1
 		j := cr.Object.(Job) 
-		j.Sequence = sequence
-		j.Created = time.Now()
-		j.Prio = j.RawPrio
-		jobs = append(jobs, &j)
-		waiting.Release()
+		if (appendJob(&j)){
+			waiting.Release()
+		}
 		break
 	case "status":
 		s := NewStatus()
+		s.MaxProcess = sem.Permits()
 		s.Process = sem.Available() + len(jobs)
 		s.Running =  sem.Available()
 		s.Sequence = sequence

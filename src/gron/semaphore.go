@@ -44,3 +44,7 @@ func (s *Semaphore) Release() {
 func (s *Semaphore) Available() int {
 	return s.permits - s.avail
 }
+
+func (s *Semaphore) Permits() int {
+	return s.permits
+}

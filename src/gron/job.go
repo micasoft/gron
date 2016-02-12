@@ -58,5 +58,9 @@ func (js JobsSorter) Swap(i, j int) {
 // Less reports whether the element with
 // index i should sort before the element with index j.
 func (js JobsSorter) Less(i, j int) bool {
+	if js[i].Prio == js[j].Prio {
+		return js[i].Created.Nanosecond() > js[j].Created.Nanosecond() 
+	}
+
 	return js[i].Prio < js[j].Prio
 }
