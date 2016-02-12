@@ -5,11 +5,11 @@ import (
 	"gron"
 )
 
-var daemon = flag.Bool("d", false, "Starting as a daemon")
-var status = flag.Bool("status", false, "Maximun of process")
-var cmd = flag.String("c", "ls", "Command")
-var max = flag.Int("max", 10, "Maximun of process")
-var prio = flag.Int("p", 0, "Set a prio of process")
+var daemon = flag.Bool("d", false, "Starting gron as a daemon")
+var status = flag.Bool("status", false, "Status of daemon")
+var cmd = flag.String("c", "ls", "Commmand in bash that will be run")
+var max = flag.Int("max", 10, "Maximum of process can be executed at same time")
+var prio = flag.Int("p", 0, "Set a priority at process level")
 
 func main() {
 	//Read config
@@ -20,7 +20,7 @@ func main() {
 		gron.Server(*max)
 		break
 	case *status:
-		gron.Status()
+		gron.GetStatus()
 		break
 	default:
 		gron.Client(cmd, prio)

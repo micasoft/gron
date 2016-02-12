@@ -1,32 +1,14 @@
 package gron
 
 import (
-	"bytes"
-	"encoding/gob"
-	"io/ioutil"
 	"log"
 	"net"
+	"github.com/fatih/color"
+	"github.com/olekukonko/tablewriter"
+	"fmt"
+	"os"
+	"strconv"
 )
-
-type ClientRequest struct {
-	Request string
-	Job     Job
-}
-
-func (cr *ClientRequest) Encode() []byte {
-	w := new(bytes.Buffer)
-	encoder := gob.NewEncoder(w)
-	encoder.Encode(cr.Request)
-	encoder.Encode(cr.Job)
-	return w.Bytes()
-}
-
-func (cr *ClientRequest) Decode(buf []byte) {
-	r := bytes.NewBuffer(buf)
-	decoder := gob.NewDecoder(r)
-	decoder.Decode(&cr.Request)
-	decoder.Decode(&cr.Job)
-}
 
 func connect() net.Conn {
 	c, err := net.Dial("unix", sock)
@@ -39,14 +21,16 @@ func connect() net.Conn {
 func Client(cmd *string, prio *int) {
 	c := connect()
 	defer c.Close()
-	bcr := ClientRequest{Request: "job", Job: Job{RawCommand: *cmd, RawPrio: *prio}}
+	bcr := NewClientRequest()
+	bcr.Request= "job"
+	bcr.Object = Job{RawCommand: *cmd, RawPrio: *prio}
 	_, err := c.Write(bcr.Encode())
 	if err != nil {
 		log.Fatal("write error:", err)
 	}
 }
 
-func Status() {
+func GetStatus() {
 	c := connect()
 	defer c.Close()
 	bcr := ClientRequest{Request: "status"}
@@ -54,7 +38,23 @@ func Status() {
 	if err != nil {
 		log.Fatal("write error:", err)
 	} else {
-		result, _ := ioutil.ReadAll(c)
-		log.Println(result)
+		s := NewStatus()
+		s.Decode(c)
+		cyan := color.New(color.FgCyan).SprintFunc()
+		yellow := color.New(color.FgYellow).SprintFunc()
+		fmt.Printf("%s : \t%s\n", cyan("Total of process"), yellow(s.Process))
+		fmt.Printf("%s : \t%s\n", cyan("Total of running"), yellow(s.Running))
+		fmt.Printf("%s: \t\t%s\n\n", cyan("Total of seq."), yellow(s.Sequence))
+
+		if (len(s.Waiting.([]*Job)) > 0) {
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Landing", "Command", "Priority"})
+			for _, j := range s.Waiting.([]*Job) {
+				v := []string{j.Created.Format("15:04:05.000"), j.RawCommand,  strconv.Itoa(j.Prio)}
+	    		table.Append(v)
+			}
+			table.Render()
+		}
 	}
 }
+
