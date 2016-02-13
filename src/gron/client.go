@@ -1,11 +1,11 @@
 package gron
 
 import (
-	"log"
-	"net"
+	"fmt"
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
-	"fmt"
+	"log"
+	"net"
 	"os"
 	"time"
 )
@@ -22,7 +22,7 @@ func Client(cmd *string, prio *int) {
 	c := connect()
 	defer c.Close()
 	bcr := NewClientRequest()
-	bcr.Request= "job"
+	bcr.Request = "job"
 	bcr.Object = Job{RawCommand: *cmd, RawPrio: *prio}
 	_, err := c.Write(bcr.Encode())
 	if err != nil {
@@ -47,15 +47,24 @@ func GetStatus() {
 		fmt.Printf("%s : \t%s\n", cyan("Total of running"), yellow(s.Running))
 		fmt.Printf("%s: \t\t%s\n\n", cyan("Total of seq."), yellow(s.Sequence))
 
-		if (len(s.Waiting.([]*Job)) > 0) {
+		if len(s.Waiting.([]*Job)) > 0 {
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"Sequence", "Landing", "Command", "Priority"})
 			for _, j := range s.Waiting.([]*Job) {
-				v := []string{fmt.Sprintf("%09d",j.Sequence), fmt.Sprintf("%.3f",time.Now().Sub(j.Created).Seconds()), j.RawCommand, fmt.Sprintf("%d", j.Prio)}
-	    		table.Append(v)
+				v := []string{fmt.Sprintf("%09d", j.Sequence), fmt.Sprintf("%.3f", time.Now().Sub(j.Created).Seconds()), j.RawCommand, fmt.Sprintf("%d", j.Prio)}
+				table.Append(v)
+			}
+			table.Render()
+		}
+
+		if len(s.Finished.([]*Job)) > 0 {
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Sequence", "Took", "Command", "Priority", "Exit"})
+			for _, j := range s.Finished.([]*Job) {
+				v := []string{fmt.Sprintf("%09d", j.Sequence), fmt.Sprintf("%.3f", j.Took.Seconds()), j.RawCommand, fmt.Sprintf("%d", j.Prio), fmt.Sprintf("%d", j.ExitStatus)}
+				table.Append(v)
 			}
 			table.Render()
 		}
 	}
 }
-

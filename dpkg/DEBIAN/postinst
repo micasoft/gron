@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+  configure)
+      chown -R www-data:www-data /usr/bin/gron
+      chmod 0770 /usr/bin/gron
+      systemctl enable gron
+    ;;
+  *)
+      echo "Post install called with unknown argument \`$1'" >&2
+      exit 1
+    ;;
+esac
+
+exit 0

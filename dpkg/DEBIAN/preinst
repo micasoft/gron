@@ -1,0 +1,9 @@
+#! /bin/sh
+set -e
+ENV=live
+case "$1" in
+  upgrade)
+   	systemctl restart gron
+    ;;
+esac
+exit 0

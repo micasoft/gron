@@ -6,13 +6,13 @@ import (
 	"net"
 )
 
-
 type Status struct {
-	MaxProcess 	int
-	Process 	int
-	Running		int
-	Sequence	int
-	Waiting     interface{}
+	MaxProcess int
+	Process    int
+	Running    int
+	Sequence   int
+	Waiting    interface{}
+	Finished   interface{}
 }
 
 func NewStatus() *Status {

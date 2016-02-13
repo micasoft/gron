@@ -1,0 +1,7 @@
+Package: gron
+Version: 0.1-0
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: Jorge Carneiro <micasoft@kaymu.com>
+Description: gron, job server lightweight

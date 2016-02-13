@@ -6,10 +6,9 @@ import (
 	"net"
 )
 
-
 type ClientRequest struct {
 	Request string
-	Object     interface{}
+	Object  interface{}
 }
 
 func NewClientRequest() *ClientRequest {

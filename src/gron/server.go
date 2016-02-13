@@ -16,6 +16,7 @@ const sock = "/tmp/gron.sock"
 const sh_cmd = "/bin/bash"
 
 var jobs []*Job
+var fjobs []*Job
 var sem *Semaphore
 var sequence int
 var waiting *Semaphore
@@ -55,14 +56,14 @@ func Server(max int) {
 	os.Remove(sock)
 }
 
-func appendJob(j *Job) bool{
+func appendJob(j *Job) bool {
 	for _, ja := range jobs {
 		if j.RawCommand == ja.RawCommand {
-			ja.Prio ++
+			ja.Prio++
 			return false
 		}
 	}
-	sequence ++
+	sequence++
 	j.Sequence = sequence
 	j.Created = time.Now()
 	j.Prio = j.RawPrio
@@ -76,8 +77,8 @@ func trait_request(c net.Conn) {
 	cr.Decode(c)
 	switch cr.Request {
 	case "job":
-		j := cr.Object.(Job) 
-		if (appendJob(&j)){
+		j := cr.Object.(Job)
+		if appendJob(&j) {
 			waiting.Release()
 		}
 		break
@@ -85,9 +86,10 @@ func trait_request(c net.Conn) {
 		s := NewStatus()
 		s.MaxProcess = sem.Permits()
 		s.Process = sem.Available() + len(jobs)
-		s.Running =  sem.Available()
+		s.Running = sem.Available()
 		s.Sequence = sequence
 		s.Waiting = jobs
+		s.Finished = fjobs
 		c.Write(s.Encode())
 		break
 	}
@@ -104,10 +106,17 @@ func engine() {
 			//pop a job
 			j, jobs = jobs[len(jobs)-1], jobs[:len(jobs)-1]
 			go execute(j)
-		}else{
+		} else {
 			waiting.Acquire()
 		}
 	}
+}
+
+func finalJob(j *Job) {
+	if len(fjobs) > 20 {
+		fjobs = fjobs[:len(fjobs)-1]
+	}
+	fjobs = append([]*Job{j}, fjobs...)
 }
 
 func execute(j *Job) {
@@ -125,7 +134,9 @@ func execute(j *Job) {
 	}
 	j.Took = time.Now().Sub(j.Created)
 	j.ExitStatus = waitStatus.ExitStatus()
+
 	log.Printf("%09d : exit(%d), %.3fs", j.Sequence, j.ExitStatus, j.Took.Seconds())
+	finalJob(j)
 	sem.Release()
 	Stats()
 }
