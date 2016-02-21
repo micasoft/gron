@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=www-data
 Group=www-data
-ExecStart=/usr/bin/gron -d -max 5 > /var/log/gron.log
+ExecStart=/usr/bin/gron -d -max 5
 
 [Install]
 WantedBy=multi-user.target

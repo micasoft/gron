@@ -3,7 +3,13 @@ set -e
 ENV=live
 case "$1" in
   upgrade)
-   	systemctl restart gron
+	  if [ $(pidof /sbin/init) -eq 1 ] ; then
+	  	service gron stop
+	  	chmod +x /etc/init.d/gron
+      	update-rc.d gron remove
+      else
+      	systemctl stop gron
+      fi
     ;;
 esac
 exit 0

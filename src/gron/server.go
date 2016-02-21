@@ -64,6 +64,10 @@ func appendJob(j *Job) bool {
 		}
 	}
 	sequence++
+	//reset sequence
+	if sequence > 999999 {
+		sequence = 1
+	}
 	j.Sequence = sequence
 	j.Created = time.Now()
 	j.Prio = j.RawPrio

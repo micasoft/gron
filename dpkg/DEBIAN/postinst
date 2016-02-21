@@ -5,7 +5,13 @@ case "$1" in
   configure)
       chown -R www-data:www-data /usr/bin/gron
       chmod 0770 /usr/bin/gron
-      systemctl enable gron
+      if [ $(pidof /sbin/init) -eq 1 ] ; then
+        chmod +x /etc/init.d/gron
+      	update-rc.d gron defaults
+        service gron start
+      else
+      	systemctl enable gron
+      fi
     ;;
   *)
       echo "Post install called with unknown argument \`$1'" >&2

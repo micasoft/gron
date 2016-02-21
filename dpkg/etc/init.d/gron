@@ -1,0 +1,56 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:           gron
+# Required-Start:     $syslog
+# Required-Stop:      $syslog
+# Default-Start:      2 3 4 5
+# Default-Stop:       0 1 6
+# Short-Description:  gron
+# Description:
+### END INIT INFO
+
+RUNAS_USER=www-data:www-data
+GRON=/usr/bin/gron
+GRON_DESC="gron"
+
+# Get lsb functions
+. /lib/lsb/init-functions
+
+case "$1" in
+	start)
+
+		log_begin_msg "Status $GRON_DESC: $1"
+		start-stop-daemon \
+			--start \
+			--chuid $RUNAS_USER \
+			--background \
+			--oknodo \
+			--exec $GRON \
+			-- --d --max 5
+		log_end_msg $?
+		;;
+
+	status)
+		log_begin_msg "Status $GRON_DESC: $1"
+		start-stop-daemon --status --exec $GRON
+		log_end_msg $?
+		;;
+
+	stop)
+		log_begin_msg "Status $GRON_DESC: $1"
+		start-stop-daemon --stop --exec $GRON
+		log_end_msg $?
+		;;
+
+	restart)
+		stop
+		start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|status}"
+		exit 1
+		;;
+esac
+
+exit 0
